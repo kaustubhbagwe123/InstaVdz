@@ -5,31 +5,39 @@
   <title>AI Reels Viewer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <style>
-    * {
+  * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
 html, body {
-  height: 100%;
   width: 100%;
+  height: 100%;
   background: #000;
   color: #fff;
   font-family: sans-serif;
   overflow: hidden;
 }
 
-.app {
+.mobile-frame {
   width: 100%;
-  height: 100vh;
-  margin: 0 auto;
-  position: relative;
-  overflow: hidden;
+  height: 100dvh;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
+  background: #000;
+}
+
+.app {
+  width: 100%;
+  max-width: 430px;
+  height: 100dvh;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  background: #000;
 }
 
 video {
@@ -51,14 +59,12 @@ video {
 
 .controls {
   position: absolute;
-  bottom: 70px;
+  bottom: calc(70px + env(safe-area-inset-bottom, 0));
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
   display: flex;
   gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 
 .controls button {
@@ -81,20 +87,6 @@ video {
   justify-content: center;
   align-items: center;
   z-index: 10;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-.controls {
-  position: absolute;
-  bottom: calc(70px + env(safe-area-inset-bottom, 0));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  display: flex;
-  gap: 10px;
-}
-.app {
-  padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
 .bottom-bar button {
@@ -107,8 +99,8 @@ video {
 
 .category-popup {
   position: absolute;
-  bottom: 0;
   left: 0;
+  bottom: 0;
   width: 100%;
   background: #111;
   transform: translateY(100%);
@@ -123,10 +115,6 @@ video {
 
 .category-popup.show {
   transform: translateY(0%);
-}
-
-.category-popup.show {
-  bottom: 0;
 }
 
 .category-popup h3 {
@@ -185,40 +173,8 @@ video {
   background: #00ffcc;
   width: 0%;
   z-index: 15;
-  transition: width 0.1s linear;
 }
-.mobile-frame {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #000;
-  overflow: hidden;
-}
-/* Desktop: simulate mobile phone size */
-@media (min-width: 481px) {
-  .mobile-frame {
-    padding: 20px 0;
-  }
 
-  .app {
-    width: 100%;
-    max-width: 430px;
-    height: 100%;
-    border-radius: 20px;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
-    overflow: hidden;
-  }
-}
-/* Mobile: full screen */
-@media (max-width: 480px) {
-  .app {
-    width: 100%;
-    height: 100vh;
-    border-radius: 0;
-  }
-}
 
   </style>
 </head>
