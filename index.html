@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Reels Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  background: #000;
+  color: #fff;
+  font-family: sans-serif;
+  overflow: hidden;
+}
+
+.app {
+  width: 100%;
+  height: 100vh;
+  margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 5px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  z-index: 10;
+}
+
+.controls {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.controls button {
+  font-size: 14px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+}
+
+.bottom-bar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.bottom-bar button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.category-popup {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: #111;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-in-out;
+  padding: 20px;
+  z-index: 20;
+  max-height: 60%;
+  overflow-y: auto;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.category-popup.show {
+  transform: translateY(0%);
+}
+
+.category-popup.show {
+  bottom: 0;
+}
+
+.category-popup h3 {
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.category-popup .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  color: #fff;
+  font-size: 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.category-popup .buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.category-popup button {
+  padding: 10px 16px;
+  font-size: 14px;
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  color: white;
+  z-index: 30;
+  background: rgba(0,0,0,0.6);
+  padding: 15px 25px;
+  border-radius: 10px;
+  display: none;
+}
+
+.progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: #00ffcc;
+  width: 0%;
+  z-index: 15;
+  transition: width 0.1s linear;
+}
+.mobile-frame {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  overflow: hidden;
+}
+/* Desktop: simulate mobile phone size */
+@media (min-width: 481px) {
+  .mobile-frame {
+    padding: 20px 0;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 430px;
+    height: 100%;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+  }
+}
+/* Mobile: full screen */
+@media (max-width: 480px) {
+  .app {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+  }
+}
+
+  </style>
+</head>
+<body>
+
+<div class="mobile-frame">
+  <div class="app" id="app">
+<div class="progress-bar" id="progressBar"></div>
+  <div class="overlay" id="interestLabel">Interest: nature</div>
+  <video id="reelVideo" autoplay muted playsinline></video>
+
+  <div class="controls">
+    <button id="toggleBtn">⏸ Pause</button>
+
+  <button id="soundBtn">🔇 Sound Off</button>  </div>
+
+  <div class="bottom-bar">
+    <button onclick="togglePopup()">🎯 Choose Category</button>
+  </div>
+
+  <div class="category-popup" id="popup">
+    <button class="close-btn" onclick="togglePopup()">✖</button>
+    <h3>Select Interest</h3>
+    <div class="buttons" id="categoryButtons">
+      <!-- Categories will be injected here -->
+    </div>
+  </div>
+
+  <div class="loader" id="loader">Loading new reel...</div>
+</div> <!-- end of .app -->
+</div> <!-- end of .mobile-frame -->
+<script>
+  const API_KEY = 'JT5LeA5bSpttqgW8B7G4mMhzdPeW8M6Kqjulj0hJr6mi4q7QAUgG74Oc'; // ← Add your Pexels API Key here
+  const progressBar = document.getElementById('progressBar');
+  const soundBtn = document.getElementById('soundBtn');
+  const videoEl = document.getElementById('reelVideo');
+  const interestLabel = document.getElementById('interestLabel');
+  const popup = document.getElementById('popup');
+  const toggleBtn = document.getElementById('toggleBtn');
+  const loader = document.getElementById('loader');
+  const categoryButtons = document.getElementById('categoryButtons');
+
+  videoEl.muted = true;
+  soundBtn.textContent = '🔇 ';
+
+  let interest = 'nature';
+  let videoList = [];
+  let currentIndex = 0;
+
+  const categories = [
+    'nature', 'space', 'city', 'animals', 'technology', 'ocean',
+  'mountains', 'travel', 'fashion', 'food', 'sports', 'cars',
+  'architecture', 'art', 'beach', 'birds', 'business', 'coffee',
+  'dance', 'desert', 'fitness', 'flowers', 'forests', 'music',
+  'rain', 'sunset', 'people', 'winter', 'waterfalls', 'wildlife'
+  ];
+
+  function togglePopup() {
+    popup.classList.toggle('show');
+  }
+
+  function setInterest(newInterest) {
+    interest = newInterest;
+    interestLabel.textContent = `Interest: ${interest}`;
+    popup.classList.remove('show');
+    loadVideos();
+  }
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  async function loadVideos() {
+    showLoader(true);
+    try {
+      const res = await fetch(`https://api.pexels.com/videos/search?query=${interest}&per_page=15`, {
+        headers: { Authorization: API_KEY }
+      });
+      const data = await res.json();
+      const files = data.videos.map(v => v.video_files.find(f => f.quality === 'sd' && f.file_type === 'video/mp4')?.link).filter(Boolean);
+      videoList = shuffleArray(files);
+      currentIndex = 0;
+      playVideo(currentIndex);
+    } catch (err) {
+      alert("Failed to fetch videos. Check your API key or internet.");
+    } finally {
+      showLoader(false);
+    }
+  }
+
+  function playVideo(index) {
+    if (videoList[index]) {
+      showLoader(true);
+      videoEl.src = videoList[index];
+      videoEl.load();
+      videoEl.onloadeddata = () => {
+        showLoader(false);
+        videoEl.play();
+        toggleBtn.textContent = '⏸ Pause';
+      };
+    }
+  }
+
+  function nextVideo() {
+    currentIndex++;
+    if (currentIndex >= videoList.length) {
+      loadVideos();
+    } else {
+      playVideo(currentIndex);
+    }
+  }
+
+  function prevVideo() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      playVideo(currentIndex);
+    }
+  }
+
+  function showLoader(show) {
+    loader.style.display = show ? 'block' : 'none';
+  }
+// Common toggle logic
+function togglePlayPause() {
+  if (videoEl.paused) {
+    videoEl.play();
+    toggleBtn.textContent = '⏸ Pause';
+  } else {
+    videoEl.pause();
+    toggleBtn.textContent = '▶️ Play';
+  }
+}
+  // Add Event Listeners once
+  toggleBtn.addEventListener('click', () => {
+    if (videoEl.paused) {
+      videoEl.play();
+      toggleBtn.textContent = '⏸ Pause';
+    } else {
+      videoEl.pause();
+      toggleBtn.textContent = '▶️ Play';
+    }
+  });
+
+  soundBtn.addEventListener('click', () => {
+    videoEl.muted = !videoEl.muted;
+    soundBtn.textContent = videoEl.muted ? '🔇' : '🔊';
+  });
+
+  videoEl.addEventListener('ended', () => {
+    nextVideo();
+  });
+
+  videoEl.addEventListener('timeupdate', () => {
+    if (videoEl.duration) {
+      const progress = (videoEl.currentTime / videoEl.duration) * 100;
+      progressBar.style.width = progress + '%';
+    }
+  });
+
+  videoEl.addEventListener('loadeddata', () => {
+    progressBar.style.width = '0%';
+  });
+
+  // Swipe gesture (mobile)
+  let touchStartY = 0;
+  document.getElementById('app').addEventListener('touchstart', e => {
+    touchStartY = e.touches[0].clientY;
+  });
+  document.getElementById('app').addEventListener('touchend', e => {
+    const diff = touchStartY - e.changedTouches[0].clientY;
+    if (diff > 30) nextVideo();
+    else if (diff < -30) prevVideo();
+  });
+
+  // Scroll gesture (desktop)
+  document.getElementById('app').addEventListener('wheel', e => {
+    if (e.deltaY > 0) nextVideo();
+    else prevVideo();
+  });
+toggleBtn.addEventListener('click', togglePlayPause);
+  // Inject category buttons
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+    btn.onclick = () => setInterest(cat);
+    categoryButtons.appendChild(btn);
+  });
+  // Tap to pause/play on mobile and desktop
+videoEl.addEventListener('click', togglePlayPause);
+videoEl.addEventListener('touchend', (e) => {
+  // Prevent scroll-triggered playback toggle
+  if (Math.abs(touchStartY - e.changedTouches[0].clientY) < 10) {
+    togglePlayPause();
+  }
+});
+
+  loadVideos(); // initial load
+</script>
+
+</body>
+</html>
